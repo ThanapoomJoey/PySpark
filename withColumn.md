@@ -75,6 +75,54 @@ df = df.withColumn("left", ltrim(col("name")))
 df.withColumn("length_ltrim",length(col("left"))).show()
  ```
 
+**`rtrim()`**: ตัดช่องว่างที่ด้านขวาของข้อความ
+```python
+from pyspark.sql.functions import rtrim
+
+df = df.withColumn("right_trimmed_name", rtrim(col("name")))
+ ```
+
+**`concat()`**: เชื่อมข้อความจากหลายคอลัมน์
+```python
+from pyspark.sql.functions import concat , col , lit
+
+df.withColumn("fullname", concat(col("firstname"), lit(" ") ,col("lastname"))).show()
+ ```
+
+**`substr()`**: ดึงข้อความบางส่วนจาก string (ตาม index)
+```python
+from pyspark.sql.functions import substr
+df = df.withColumn("substring_name", substr(col("name"), 1, 5)) #เริ่มจากตัวที่ 1 ความยาว 5 ตัว
+ ```
+
+**`initcap()`**: แปลงให้ตัวอักษรแรกเป็นตัวพิมพ์ใหญ่ (capital letter)
+```python
+from pyspark.sql.functions import initcap
+
+df = df.withColumn("name_initcap", initcap(col("name")))
+ ```
+
+**`translate()`**: แทนที่ตัวอักษรในข้อความ
+```python
+from pyspark.sql.functions import translate
+
+df = df.withColumn("replaced_name", translate(col("name"), "aeiou", "12345"))
+ ```
+**`regexp_replace()`**: แทนที่ข้อความตาม pattern
+```python
+from pyspark.sql.functions import regexp_replace
+
+df = df.withColumn("clean_name", regexp_replace(col("name"), "John", "Johnny"))  # แทนที่ "John" เป็น "Johnny"
+ ```
+
+**`regexp_extract()`** ดึงข้อความจาก pattern
+```python
+from pyspark.sql.functions import regexp_extract
+
+df = df.withColumn("first_letter", regexp_extract(col("name"), "^(.)", 1))  # ดึงตัวแรกจาก "name"
+ ```
+รวมสูตร regexp ที่สำคัญ [Regex_Cheat_Sheet_ETL.md](Regex_Cheat_Sheet_ETL.md)
+
  🔁 สรุปฟังก์ชัน **String Transformation** ที่ใช้บ่อย
 
 | ฟังก์ชัน           | คำอธิบาย                          | ตัวอย่าง                                            |
@@ -92,7 +140,7 @@ df.withColumn("length_ltrim",length(col("left"))).show()
 | **`regexp_extract()`**| ดึงข้อความจาก pattern             | `regexp_extract(col("name"), "^(.)", 1)`            |
 
 ### 6. สร้างคอลัมน์จากหลายคอลัมน์  
-รวมค่าจากหลายคอลัมน์มาไว้ในคอลัมน์ใหม่ เช่น การบวกคะแนนจากหลายวิชา
+รวมค่าจากหลายคอลัมน์มาไว้ในคอลัมน์ใหม่ เช่น การคูณหาผลรวม
 ```python
 df.withColumn("total",col("quantity") * col("unit_price")).show()
  ```
