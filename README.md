@@ -175,13 +175,19 @@ df.groupBy("category").agg(
 | `max()` | หาค่าสูงสุด |
 | `min()` | หาค่าต่ำสุด |
 
+```python
+from pyspark.sql.functions import sum , format_number
+
+df.groupBy("branch_id").agg(format_number(sum("total_amount"),2).alias("total_branch_sales")).show()
+ ```
 ---
 
 ### 3. `orderBy()` การจัดเรียงข้อมูล
 
 ```python
 df.orderBy("sales").show()  # เรียงจากน้อยไปมาก
-df.orderBy(df.sales.desc()).show()  # เรียงจากมากไปน้อย
+df.orderBy(col("sales").desc()).show()  # เรียงจากมากไปน้อย แบบ 1
+df.orderBy(col("branch_id"),ascending = False).show() # เรียงจากมากไปน้อย แบบที่ 2
 ```
 
 **หลายเงื่อนไข:**
@@ -205,3 +211,71 @@ agg_df.filter(agg_df.total_sales > 1000).show()
 ```python
 df.groupBy("region").agg(avg("score").alias("average_score")).show()
 ```
+
+**รวมการใช้งาน**
+```python
+from pyspark.sql.functions import sum , col
+
+df.groupBy(col("sale_date") , col("branch_id"))\
+  .agg(sum("quantity").alias("total_quantity"))\
+  .orderBy(col("sale_date").asc(),col("total_quantity").desc())\
+  .filter(col("total_quantity") > 25000).show()
+ ```
+
+# 📘 Day 4: Join + SQL  
+
+## 🎯 เป้าหมาย:
+- ใช้ `.join()` เชื่อมข้อมูล 2 ชุด
+- ใช้ SQL ผ่าน `spark.sql()` เพื่อเขียน query บน DataFrame
+- ทำ Mini Project เพื่อฝึก Join + SQL แบบครบถ้วน
+
+---
+
+## 🧠 เนื้อหา
+
+### 🔹 1. PySpark `.join()`
+
+```python
+df1.join(df2, on="id", how="inner")
+ ```
+
+### 🔹 2. ประเภทของ Join
+
+| ประเภท Join | คำอธิบาย |
+|-------------|----------|
+| `inner`     | แสดงเฉพาะแถวที่ match กันทั้ง 2 ฝั่ง |
+| `left`      | แสดงทุกแถวจากฝั่งซ้าย ถ้าไม่ match จะเป็น NULL |
+| `right`     | แสดงทุกแถวจากฝั่งขวา ถ้าไม่ match จะเป็น NULL |
+| `outer`     | แสดง ทุกข้อมูลที่มีอยู่ จากทั้งสองตาราง แม้ไม่มี match ก็ตาม |
+
+```python
+df1.join(df2, df1.id == df2.id, how="left")
+ ```
+
+---
+
+### 🔹 3. แก้ชื่อซ้ำก่อน Join
+
+```python
+df1 = df1.withColumnRenamed("name", "name_df1")
+df2 = df2.withColumnRenamed("name", "name_df2")
+ ```
+
+---
+
+### 🔹 4. การใช้ SQL บน DataFrame
+
+```python
+sales_df.createOrReplaceTempView("temp_sale")
+product_df.createOrReplaceTempView("temp_product")
+
+spark.sql("""
+          select s.customer , s.sale_date, sum((p.price - p.cost)*s.quantity) as total_profit , sum(s.quantity * p.price) as total_sale
+          from temp_sale s
+          left join temp_product p
+            on s.product_id = p.product_id
+          group by s.customer,s.sale_date
+          """).show()
+ ```
+
+---
